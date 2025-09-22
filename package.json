@@ -1,0 +1,9 @@
+{
+  "name": "simple-ecom",
+  "version": "1.0.0",
+  "main": "backend/app.js",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
+
