@@ -1,0 +1,56 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "<your-dockerhub-username>/simple-ecom:latest"
+        AWS_REGION = "ap-south-1"
+    }
+
+    stages {
+        stage('Clone') {
+            steps {
+                git url: 'https://github.com/<your-username>/simple-ecom.git', branch: 'main'
+            }
+        }
+
+        stage('Build Docker') {
+            steps {
+                script {
+                    docker.build("simple-ecom")
+                }
+            }
+        }
+
+        stage('Push Docker') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker tag simple-ecom $DOCKER_IMAGE
+                        docker push $DOCKER_IMAGE
+                    """
+                }
+            }
+        }
+
+        stage('Terraform Init & Apply') {
+            steps {
+                dir('infra') {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+                        sh '''
+                            terraform init
+                            terraform apply -auto-approve
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                sh 'kubectl apply -f k8s/deployment.yaml'
+            }
+        }
+    }
+}
+
