@@ -34,7 +34,7 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 dir('infra') {
-                    withEnv(["AWS_REGION=us-east-1"]) {
+                    withEnv(["AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}", "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}"]) {
                         sh '''
                             terraform init
                             terraform apply -auto-approve
