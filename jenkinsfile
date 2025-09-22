@@ -2,41 +2,39 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "<your-dockerhub-username>/simple-ecom:latest"
-        AWS_REGION = "ap-south-1"
+        DOCKER_IMAGE = "franklin11/sample-ecom:latest"
+        AWS_REGION = "us-east-1"
     }
 
     stages {
         stage('Clone') {
             steps {
-                git url: 'https://github.com/<your-username>/simple-ecom.git', branch: 'main'
+                git url: 'https://github.com/AlbertFrank11/sample-demo.git', branch: 'main'
             }
         }
 
         stage('Build Docker') {
             steps {
-                script {
-                    docker.build("simple-ecom")
-                }
+                sh 'docker build -t sample-ecom .'
             }
         }
 
         stage('Push Docker') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh """
+                    sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker tag simple-ecom $DOCKER_IMAGE
-                        docker push $DOCKER_IMAGE
-                    """
+                        docker tag sample-ecom franklin11/sample-ecom:latest
+                        docker push franklin11/sample-ecom:latest
+                    '''
                 }
             }
         }
 
-        stage('Terraform Init & Apply') {
+        stage('Terraform Apply') {
             steps {
                 dir('infra') {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+                    withEnv(["AWS_REGION=us-east-1"]) {
                         sh '''
                             terraform init
                             terraform apply -auto-approve
