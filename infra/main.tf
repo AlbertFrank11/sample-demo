@@ -2,9 +2,9 @@
 
 # --- Provider Block ---
 provider "aws" {
-  region                  = "us-east-1"
-  shared_credentials_file = "/root/.aws/credentials"
-  profile                 = "default"
+  region                   = "us-east-1"
+  shared_credentials_files = ["/root/.aws/credentials"]
+  profile                  = "default"
 }
 
 # --- Resource Block ---
